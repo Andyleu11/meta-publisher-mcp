@@ -1,0 +1,132 @@
+[
+  {
+    "name": "Flooring Xtra",
+    "website": "https://www.flooringxtra.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Choices Flooring",
+    "website": "https://www.choicesflooring.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Andersens",
+    "website": "https://www.andersens.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Solomons",
+    "website": "https://www.solomons.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Carpet Court",
+    "website": "https://www.carpetcourt.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "National Tiles",
+    "website": "https://www.nationaltiles.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Beaumont Tiles",
+    "website": "https://www.beaumonttiles.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Carpet Call",
+    "website": "https://www.carpetcall.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "national_retail"
+  },
+  {
+    "name": "Bayside Carpets & Vinyls",
+    "website": null,
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "capalaba_bayside",
+    "notes": {
+      "phone": "(07) 3207 5320",
+      "postalAddress": "PO Box 511, Capalaba QLD 4157",
+      "serviceArea": "Capalaba / Birkdale 4157–4159",
+      "type": "Carpet and vinyl retailer/installer"
+    }
+  },
+  {
+    "name": "Perfect Floors – Capalaba",
+    "website": "https://perfectfloors.com.au/",
+    "facebookPageUrl": null,
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "capalaba_bayside",
+    "notes": {
+      "address": "9/68 Redland Bay Rd, Capalaba QLD 4157",
+      "serviceArea": "Capalaba / Brisbane",
+      "type": "Carpet, vinyl & hard flooring supplier with install"
+    }
+  },
+  {
+    "name": "Bennetts Carpets – Cleveland",
+    "website": "https://bennettscarpets.com.au/",
+    "facebookPageUrl": "https://www.facebook.com/bennettscarpets.com.au/",
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "redlands_cleveland",
+    "notes": {
+      "address": "77 Shore St W, Cleveland QLD 4163",
+      "serviceArea": "Cleveland / Brisbane",
+      "type": "Carpet and flooring showroom"
+    }
+  },
+  {
+    "name": "Online Flooring Store – Cleveland",
+    "website": "https://www.onlineflooringstore.com.au/",
+    "facebookPageUrl": "https://www.facebook.com/onlineflooringstore/",
+    "instagramHandle": "onlineflooringstore",
+    "allowScrape": true,
+    "region": "redlands_cleveland",
+    "notes": {
+      "address": "7/13–17 Enterprise St, Cleveland QLD 4163",
+      "serviceArea": "Cleveland / Redlands / Brisbane",
+      "type": "Online + showroom flooring retailer"
+    }
+  },
+  {
+    "name": "Quality Carpets Queensland – Cleveland",
+    "website": "https://qualitycarpetsqld.com/",
+    "facebookPageUrl": "https://www.facebook.com/qualitycarpetsqueensland/",
+    "instagramHandle": null,
+    "allowScrape": true,
+    "region": "redlands_cleveland",
+    "notes": {
+      "address": "12a Ross Court, 197 Bloomfield St, Cleveland QLD 4163",
+      "serviceArea": "The Redlands & Brisbane",
+      "type": "Carpet, vinyl & timber retailer/installer"
+    }
+  }
+]

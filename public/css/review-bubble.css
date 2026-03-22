@@ -1,0 +1,25 @@
+/* Dark panel: header and body use the same foreground colour. */
+.review-bubble {
+  background-color: var(--color-surface-offset, #1a1a1a);
+  color: #ffffff;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.review-bubble-header {
+  color: #ffffff;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  margin: 0 0 0.65rem 0;
+}
+
+.review-bubble p,
+.review-bubble .review-text {
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.5;
+  margin: 0;
+}

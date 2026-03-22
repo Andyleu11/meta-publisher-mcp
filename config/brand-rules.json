@@ -1,0 +1,5 @@
+{
+  "forbidCompetitorNames": true,
+  "maxQuotedWordsFromSupplier": 20,
+  "allowPriceClaims": false
+}

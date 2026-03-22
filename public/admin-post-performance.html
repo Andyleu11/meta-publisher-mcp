@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Post performance — A to Z Meta Publisher</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1280px; }
+    h1 { font-size: 1.25rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.8125rem; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f4f4f4; }
+    th.sortable { cursor: pointer; user-select: none; text-decoration: underline; }
+    th.sortable:hover { background: #eaeaea; }
+    .num { text-align: right; font-variant-numeric: tabular-nums; }
+    .caption { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mono { font-family: ui-monospace, monospace; font-size: 0.75rem; }
+    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+    .msg { padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0; }
+    .msg.error { background: #fee; color: #800; }
+    .msg.loading { background: #f5f5f5; color: #333; }
+    a { color: #06c; }
+  </style>
+</head>
+<body>
+  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <h1>Post performance</h1>
+  <p>Latest cached metrics from <code>post_insights</code> (via MCP <code>get_post_insights</code>). Local schedule/caption links are TODO until Meta IDs are stored on <code>scheduled_posts</code>.</p>
+
+  <div class="toolbar">
+    <label>
+      Platform
+      <select id="platform">
+        <option value="all">All</option>
+        <option value="facebook">Facebook</option>
+        <option value="instagram">Instagram</option>
+      </select>
+    </label>
+    <button type="button" id="refresh">Refresh</button>
+    <span id="meta"></span>
+  </div>
+  <div id="banner"></div>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Platform</th>
+        <th>Meta post ID</th>
+        <th>Scheduled</th>
+        <th>Posted</th>
+        <th>Caption</th>
+        <th class="num sortable" id="sortImp" data-metric="impressions">Impressions</th>
+        <th class="num sortable" id="sortReach" data-metric="reach">Reach</th>
+        <th class="num sortable" id="sortEng" data-metric="engagement">Engagement</th>
+        <th class="num" title="engagement ÷ reach">Eng. rate</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const bannerEl = document.getElementById('banner');
+    const metaEl = document.getElementById('meta');
+    const platformEl = document.getElementById('platform');
+
+    let items = [];
+    let sortKey = 'engagement';
+    let sortDesc = true;
+
+    function showBanner(html, cls) {
+      bannerEl.innerHTML = html ? '<div class="msg ' + cls + '">' + html + '</div>' : '';
+    }
+
+    function escapeHtml(s) {
+      if (s == null || s === '') return '';
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function dash(v) {
+      if (v === undefined || v === null) return '–';
+      if (typeof v === 'number' && !Number.isFinite(v)) return '–';
+      if (typeof v === 'number') return String(v);
+      return String(v);
+    }
+
+    function fmtPct(engagement, reach) {
+      if (typeof engagement !== 'number' || typeof reach !== 'number' || reach <= 0) return '–';
+      return ((engagement / reach) * 100).toFixed(1) + '%';
+    }
+
+    function sortItems() {
+      const k = sortKey;
+      const dir = sortDesc ? 1 : -1;
+      items = [...items].sort((a, b) => {
+        const av = a.metrics && typeof a.metrics[k] === 'number' ? a.metrics[k] : null;
+        const bv = b.metrics && typeof b.metrics[k] === 'number' ? b.metrics[k] : null;
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return (bv - av) * dir;
+      });
+    }
+
+    function render() {
+      sortItems();
+      rowsEl.innerHTML = '';
+      for (const row of items) {
+        const m = row.metrics || {};
+        const mid = String(row.metaPostId || '');
+        const tr = document.createElement('tr');
+        tr.innerHTML =
+          '<td>' + escapeHtml(row.platform) + '</td>' +
+          '<td class="mono" title="' + escapeHtml(mid) + '">' +
+            escapeHtml(mid.length > 22 ? mid.slice(0, 22) + '…' : mid) +
+          '</td>' +
+          '<td>' + dash(row.scheduledAt) + '</td>' +
+          '<td>' + dash(row.postedAt) + '</td>' +
+          '<td class="caption" title="' + escapeHtml(row.captionPreview || '') + '">' +
+            escapeHtml(row.captionPreview != null && row.captionPreview !== '' ? row.captionPreview : '–') +
+          '</td>' +
+          '<td class="num">' + dash(m.impressions) + '</td>' +
+          '<td class="num">' + dash(m.reach) + '</td>' +
+          '<td class="num">' + dash(m.engagement) + '</td>' +
+          '<td class="num">' + fmtPct(m.engagement, m.reach) + '</td>';
+        rowsEl.appendChild(tr);
+      }
+    }
+
+    function updateSortHeaders() {
+      document.querySelectorAll('th.sortable').forEach(function (th) {
+        const m = th.getAttribute('data-metric');
+        var label = th.textContent.replace(/\s*[\u2191\u2193]\s*$/, '').trim();
+        if (m === sortKey) {
+          th.textContent = label + (sortDesc ? ' \u2193' : ' \u2191');
+        } else {
+          th.textContent = label;
+        }
+      });
+    }
+
+    async function load() {
+      showBanner('Loading…', 'loading');
+      metaEl.textContent = '';
+      try {
+        const p = platformEl.value;
+        const q = new URLSearchParams({ platform: p, limit: '50' });
+        const res = await fetch('/api/post-performance?' + q.toString());
+        if (!res.ok) {
+          const err = await res.json().catch(function () { return {}; });
+          throw new Error(err.message || 'HTTP ' + res.status);
+        }
+        const data = await res.json();
+        items = data.items || [];
+        metaEl.textContent = items.length + ' post(s)';
+        showBanner('');
+        updateSortHeaders();
+        render();
+      } catch (e) {
+        showBanner(escapeHtml(e instanceof Error ? e.message : String(e)), 'error');
+        rowsEl.innerHTML = '';
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', load);
+    platformEl.addEventListener('change', load);
+
+    document.querySelectorAll('th.sortable').forEach(function (th) {
+      th.addEventListener('click', function () {
+        const m = th.getAttribute('data-metric');
+        if (m === sortKey) {
+          sortDesc = !sortDesc;
+        } else {
+          sortKey = m;
+          sortDesc = true;
+        }
+        updateSortHeaders();
+        render();
+      });
+    });
+
+    load();
+  </script>
+</body>
+</html>

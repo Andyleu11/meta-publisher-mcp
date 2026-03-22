@@ -1,0 +1,56 @@
+[
+  {
+    "name": "AIRLAY",
+    "website": "",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": [],
+    "allowScrape": true,
+    "allowEmailContent": true
+  },
+  {
+    "name": "Armstrong Flooring",
+    "website": "https://www.armstrongflooring.com.au/",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": ["armstrongflooring.au", "armstrongflooring.com.au"],
+    "allowScrape": true,
+    "allowEmailContent": true
+  },
+  {
+    "name": "BEAULIEU AUSTRALIA PTY LTD",
+    "website": "",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": [],
+    "allowScrape": true,
+    "allowEmailContent": true
+  },
+  {
+    "name": "CLEVER CHOICE",
+    "website": "",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": [],
+    "allowScrape": true,
+    "allowEmailContent": true
+  },
+  {
+    "name": "Polyflor",
+    "website": "https://www.polyflor.com.au/",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": ["polyflor.com.au"],
+    "allowScrape": true,
+    "allowEmailContent": true
+  },
+  {
+    "name": "Preference Floors",
+    "website": "",
+    "facebookPageUrl": "",
+    "instagramHandle": "",
+    "emailDomains": [],
+    "allowScrape": true,
+    "allowEmailContent": true
+  }
+]

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Upload supplier emails — A to Z</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    #zone {
+      border: 2px dashed #444; border-radius: 8px; padding: 2rem; text-align: center; background: #fafafa;
+    }
+    #zone.drag { background: #eef6ff; border-color: #226; }
+    #out { margin-top: 1.5rem; font-size: 0.9rem; white-space: pre-wrap; }
+    .ok { color: #0a5; }
+    .err { color: #a20; }
+    h1 { font-size: 1.25rem; }
+    label { display: block; margin-top: 1rem; }
+    input[type="text"] { width: 100%; max-width: 100%; padding: 0.4rem; }
+  </style>
+</head>
+<body>
+  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <h1>Upload supplier emails</h1>
+  <p>Drop <strong>.eml</strong>, <strong>.msg</strong>, or <strong>.zip</strong> (containing .eml/.msg). Parsed on the server; nothing is posted to social media.</p>
+
+  <label>Optional tags (comma-separated, e.g. <code>Polyflor promo, Hybrid bulletin</code>)</label>
+  <input type="text" id="manualTags" placeholder="manual tags for this batch" />
+
+  <div id="zone">
+    <p>Drag files here or</p>
+    <input type="file" id="file" multiple accept=".eml,.msg,.zip" />
+  </div>
+  <div id="out"></div>
+
+  <script>
+    const zone = document.getElementById('zone');
+    const out = document.getElementById('out');
+    const fileInput = document.getElementById('file');
+    const manualTags = document.getElementById('manualTags');
+
+    const apiBase = ''; // same origin
+
+    function show(t, cls) {
+      out.innerHTML = '<div class="' + (cls || '') + '">' + t + '</div>';
+    }
+
+    async function upload(files) {
+      if (!files.length) return;
+      show('Uploading…', '');
+      const fd = new FormData();
+      for (const f of files) fd.append('files', f);
+      const tags = manualTags.value.trim();
+      if (tags) fd.append('manualTags', tags);
+      try {
+        const res = await fetch(apiBase + '/api/upload-email', { method: 'POST', body: fd });
+        const data = await res.json();
+        if (!res.ok) {
+          show('Error: ' + (data.error || res.status), 'err');
+          return;
+        }
+        const lines = [];
+        for (const r of data.results || []) {
+          lines.push('— ' + r.filename + ' [' + r.status + '] id=' + r.id);
+          if (r.error) lines.push('  ERROR: ' + r.error);
+          for (const ing of r.ingestions || []) {
+            lines.push('  From: ' + ing.fromEmail);
+            lines.push('  Subject: ' + ing.subject);
+            lines.push('  Supplier match: ' + (ing.matchedSupplier || 'none'));
+            lines.push('  Attachments saved: ' + (ing.attachmentNames?.length || 0));
+            lines.push('  DB row: ' + (ing.storedId ?? '—'));
+            lines.push('  ' + ing.message);
+          }
+        }
+        show(lines.join('\n'), 'ok');
+      } catch (e) {
+        show(String(e), 'err');
+      }
+    }
+
+    zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag'));
+    zone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      zone.classList.remove('drag');
+      upload(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', () => upload(fileInput.files));
+  </script>
+</body>
+</html>

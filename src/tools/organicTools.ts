@@ -1,7 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import * as z from 'zod';
 import type { CallToolResult } from '@modelcontextprotocol/sdk/types.js';
-import { postFacebookPhoto, postInstagramPhoto } from '../metaClient.js';
+import { MetaGraphError, postFacebookPhoto, postInstagramPhoto } from '../metaClient.js';
 
 const facebookPhotoArgs = z.object({
   message: z.string(),
@@ -11,7 +11,7 @@ const facebookPhotoArgs = z.object({
 
 const instagramPhotoArgs = z.object({
   caption: z.string(),
-  imageUrl: z.string()
+  imageUrl: z.string().describe('Public HTTPS URL; use 4:5 or square assets per docs/weekly-content-planning-prompt.md.')
 });
 
 export function registerOrganicTools(mcpServer: McpServer): void {
@@ -33,10 +33,25 @@ export function registerOrganicTools(mcpServer: McpServer): void {
     },
     async (args: unknown): Promise<CallToolResult> => {
       const { message, imageUrl, published } = facebookPhotoArgs.parse(args);
-      const result = await postFacebookPhoto(message, imageUrl, { published });
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result) }]
-      };
+      try {
+        const result = await postFacebookPhoto(message, imageUrl, { published });
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result) }]
+        };
+      } catch (e) {
+        if (e instanceof MetaGraphError) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: 'text',
+                text: `post_facebook_photo failed: ${e.message}`
+              }
+            ]
+          };
+        }
+        throw e;
+      }
     }
   );
 
@@ -44,15 +59,30 @@ export function registerOrganicTools(mcpServer: McpServer): void {
     'post_instagram_photo',
     {
       description:
-        'Publish a photo with caption to the linked Instagram Business account. imageUrl must be a public HTTPS URL (Instagram Content Publishing).',
+        'Publish a feed photo to the linked Instagram Business account (Content Publishing: create container, then media_publish). imageUrl must be public HTTPS.',
       inputSchema: instagramPhotoArgs
     },
     async (args: unknown): Promise<CallToolResult> => {
       const { caption, imageUrl } = instagramPhotoArgs.parse(args);
-      const result = await postInstagramPhoto(caption, imageUrl);
-      return {
-        content: [{ type: 'text', text: JSON.stringify(result) }]
-      };
+      try {
+        const result = await postInstagramPhoto(caption, imageUrl);
+        return {
+          content: [{ type: 'text', text: JSON.stringify(result) }]
+        };
+      } catch (e) {
+        if (e instanceof MetaGraphError) {
+          return {
+            isError: true,
+            content: [
+              {
+                type: 'text',
+                text: `post_instagram_photo failed: ${e.message}`
+              }
+            ]
+          };
+        }
+        throw e;
+      }
     }
   );
 }

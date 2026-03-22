@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Scheduled posts — A to Z Meta Publisher</title>
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1200px; }
+    h1 { font-size: 1.25rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
+    th { background: #f4f4f4; }
+    .caption { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .media a { font-size: 0.8rem; word-break: break-all; }
+    .err { color: #a00; max-width: 200px; word-break: break-word; }
+    .actions button { margin-right: 0.25rem; margin-bottom: 0.25rem; }
+    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .msg { padding: 0.5rem; border-radius: 4px; }
+    .msg.error { background: #fee; color: #800; }
+    .msg.ok { background: #efe; color: #060; }
+    a { color: #06c; }
+  </style>
+</head>
+<body>
+  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <h1>Scheduled posts</h1>
+  <p>Internal admin UI. Pending rows can be cancelled or sent immediately.</p>
+  <div class="toolbar">
+    <button type="button" id="refresh">Refresh</button>
+    <span id="status"></span>
+  </div>
+  <div id="banner"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Platform</th>
+        <th>Run time (local)</th>
+        <th>Caption</th>
+        <th>Image</th>
+        <th>Status</th>
+        <th>Last error</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const bannerEl = document.getElementById('banner');
+    const statusEl = document.getElementById('status');
+
+    function showBanner(text, kind) {
+      bannerEl.innerHTML = text
+        ? '<div class="msg ' + (kind === 'error' ? 'error' : 'ok') + '">' + escapeHtml(text) + '</div>'
+        : '';
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function previewCaption(caption, max) {
+      if (!caption) return '';
+      if (caption.length <= max) return caption;
+      return caption.slice(0, max) + '…';
+    }
+
+    function localTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      return d.toLocaleString();
+    }
+
+    async function loadRows() {
+      statusEl.textContent = 'Loading…';
+      bannerEl.innerHTML = '';
+      try {
+        const res = await fetch('/api/scheduled-posts');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const items = data.items || [];
+        statusEl.textContent = items.length + ' row(s)';
+        rowsEl.innerHTML = '';
+        for (const row of items) {
+          const tr = document.createElement('tr');
+          const pending = row.status === 'pending';
+          const actions = document.createElement('td');
+          actions.className = 'actions';
+          if (pending) {
+            const cancelBtn = document.createElement('button');
+            cancelBtn.type = 'button';
+            cancelBtn.textContent = 'Cancel';
+            cancelBtn.addEventListener('click', () => doCancel(row.id));
+            const sendBtn = document.createElement('button');
+            sendBtn.type = 'button';
+            sendBtn.textContent = 'Send now';
+            sendBtn.addEventListener('click', () => doForceSend(row.id));
+            actions.appendChild(cancelBtn);
+            actions.appendChild(sendBtn);
+          } else {
+            actions.textContent = '—';
+          }
+          const mediaUrl = row.mediaUrl || '';
+          const mediaCell = mediaUrl
+            ? '<td class="media"><a href="' +
+                encodeURI(mediaUrl).replace(/'/g, '%27') +
+                '" target="_blank" rel="noopener">link</a></td>'
+            : '<td>—</td>';
+          tr.innerHTML =
+            '<td>' + row.id + '</td>' +
+            '<td>' + escapeHtml(row.platform) + '</td>' +
+            '<td>' + escapeHtml(localTime(row.runAt)) + '</td>' +
+            '<td class="caption" title="' + escapeHtml(row.caption || '') + '">' +
+              escapeHtml(previewCaption(row.caption, 80)) +
+            '</td>' +
+            mediaCell +
+            '<td>' + escapeHtml(row.status) + '</td>' +
+            '<td class="err">' + escapeHtml(row.lastError || '') + '</td>';
+          tr.appendChild(actions);
+          rowsEl.appendChild(tr);
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error';
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    async function doCancel(id) {
+      showBanner('');
+      try {
+        const res = await fetch('/api/scheduled-posts/' + id + '/cancel', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showBanner(data.message || ('Cancel failed: HTTP ' + res.status), 'error');
+          return;
+        }
+        showBanner('Cancelled #' + id, 'ok');
+        await loadRows();
+      } catch (e) {
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    async function doForceSend(id) {
+      showBanner('');
+      try {
+        const res = await fetch('/api/scheduled-posts/' + id + '/force-send', { method: 'POST' });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showBanner(data.message || ('Send failed: HTTP ' + res.status), 'error');
+          return;
+        }
+        showBanner(
+          data.success ? (data.message || 'Posted') : (data.message || 'Failed'),
+          data.success ? 'ok' : 'error'
+        );
+        await loadRows();
+      } catch (e) {
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', loadRows);
+    loadRows();
+  </script>
+</body>
+</html>

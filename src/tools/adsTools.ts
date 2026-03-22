@@ -24,18 +24,19 @@ export function registerAdsTools(mcpServer: McpServer): void {
   m.registerTool(
     'create_local_awareness_ad',
     {
-      description: 'Create a 7-day local awareness ad around Bundaberg using an existing creative.',
+      description:
+        'Create a 7-day local awareness ad for Brisbane, Redlands, and Logan using an existing creative.',
       inputSchema: localAwarenessArgs
     },
     async (args: unknown): Promise<CallToolResult> => {
       const { creativeId, radiusKm, ageMin, ageMax, dailyBudgetAud } =
         localAwarenessArgs.parse(args);
 
-      const campaign = await createCampaign('A2Z Local Awareness – Bundaberg');
+      const campaign = await createCampaign('A2Z Local Awareness – Brisbane / Redlands / Logan');
 
       const adSet = await createAdSetLocal({
         campaignId: campaign.id,
-        name: 'A2Z Bundaberg Radius',
+        name: 'A2Z Brisbane · Redlands · Logan',
         dailyBudgetAud: dailyBudgetAud ?? metaConfig.defaultDailyBudgetAud,
         radiusKm: radiusKm ?? metaConfig.defaultAdRadiusKm,
         ageMin: ageMin ?? metaConfig.defaultAgeMin,
@@ -49,7 +50,7 @@ export function registerAdsTools(mcpServer: McpServer): void {
       const ad = await createAdFromCreative({
         adSetId,
         creativeId,
-        name: 'A2Z Local Awareness – Bundaberg'
+        name: 'A2Z Local Awareness – Brisbane / Redlands / Logan'
       });
 
       return {

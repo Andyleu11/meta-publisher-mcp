@@ -1,5 +1,8 @@
 node_modules/
 dist/
+data/
+# If the hash script is run from the wrong cwd, manifest can land at repo root — don’t commit.
+/assets-manifest.json
 .env
 *.log
 .DS_Store

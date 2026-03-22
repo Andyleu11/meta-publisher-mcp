@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Draft posts — A to Z Meta Publisher</title>
+  <link rel="stylesheet" href="/css/review-bubble.css">
+  <style>
+    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1200px; }
+    h1 { font-size: 1.25rem; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
+    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: middle; }
+    th { background: #f4f4f4; }
+    .caption-cell {
+      min-width: 260px;
+      max-width: min(520px, 55vw);
+    }
+    /* Inner flex: avoid display:flex on <td> (breaks row layout / wraps button below text). */
+    .caption-cell-inner {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      min-width: 0;
+      width: 100%;
+    }
+    .caption-preview {
+      flex: 1 1 auto;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .btn-review {
+      flex: 0 0 auto;
+      font-size: 0.75rem;
+      padding: 0.2rem 0.45rem;
+      cursor: pointer;
+    }
+    #rows.quick-review-on .caption-preview { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
+    .review-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; }
+    .review-backdrop[hidden] { display: none !important; }
+    .review-dialog { position: relative; max-width: min(560px, 100%); max-height: 90vh; overflow: auto; background: #fff; border-radius: 12px; padding: 1rem 1.25rem; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
+    .review-close { position: absolute; top: 0.35rem; right: 0.5rem; border: none; background: transparent; font-size: 1.5rem; line-height: 1; cursor: pointer; color: #333; padding: 0.25rem 0.5rem; border-radius: 4px; }
+    .review-close:hover { background: #eee; }
+    .review-image { display: block; max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 0.75rem; }
+    .media a { font-size: 0.8rem; word-break: break-all; }
+    .actions {
+      display: flex;
+      flex-flow: row nowrap;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .actions button { margin: 0; }
+    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
+    .msg { padding: 0.5rem; border-radius: 4px; }
+    .msg.error { background: #fee; color: #800; }
+    .msg.ok { background: #efe; color: #060; }
+    a { color: #06c; }
+    label { font-size: 0.9rem; }
+    .warnings { font-size: 0.75rem; max-width: 280px; }
+    .warnings ul { margin: 0; padding-left: 1.1rem; }
+    .warnings li { margin-bottom: 0.25rem; }
+    .warn-tag { display: inline-block; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 3px; background: #fff3cd; color: #664; margin-right: 0.25rem; }
+  </style>
+</head>
+<body>
+  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <h1>Draft posts</h1>
+  <p>Approve or reject drafts, then schedule approved rows to the Meta queue (<code>scheduled_posts</code>).</p>
+  <div class="toolbar">
+    <button type="button" id="refresh">Refresh</button>
+    <label title="When enabled, click the caption preview to open the same review panel as the Review button">
+      <input type="checkbox" id="quickReviewToggle" />
+      Quick review
+    </label>
+    <label>
+      Status filter
+      <select id="statusFilter">
+        <option value="draft" selected>draft</option>
+        <option value="approved">approved</option>
+        <option value="rejected">rejected</option>
+        <option value="scheduled">scheduled</option>
+        <option value="all">all</option>
+      </select>
+    </label>
+    <span id="status"></span>
+  </div>
+  <div id="banner"></div>
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Created</th>
+        <th>Platforms</th>
+        <th>Caption</th>
+        <th>Image</th>
+        <th>Status</th>
+        <th>Brand checks</th>
+        <th>Actions</th>
+      </tr>
+    </thead>
+    <tbody id="rows"></tbody>
+  </table>
+
+  <div id="reviewBackdrop" class="review-backdrop" hidden aria-modal="true" role="dialog" aria-labelledby="reviewMeta">
+    <div class="review-dialog">
+      <button type="button" class="review-close" id="reviewClose" aria-label="Close review">×</button>
+      <img id="reviewImage" class="review-image" alt="" hidden />
+      <div class="review-bubble">
+        <div id="reviewMeta" class="review-bubble-header"></div>
+        <p id="reviewCaption" class="review-text"></p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const rowsEl = document.getElementById('rows');
+    const bannerEl = document.getElementById('banner');
+    const statusEl = document.getElementById('status');
+    const statusFilterEl = document.getElementById('statusFilter');
+    const quickReviewToggle = document.getElementById('quickReviewToggle');
+    const reviewBackdrop = document.getElementById('reviewBackdrop');
+    const reviewClose = document.getElementById('reviewClose');
+    const reviewMeta = document.getElementById('reviewMeta');
+    const reviewCaption = document.getElementById('reviewCaption');
+    const reviewImage = document.getElementById('reviewImage');
+
+    function openReview(row) {
+      reviewMeta.textContent =
+        '#' +
+        row.id +
+        ' · ' +
+        (Array.isArray(row.platforms) ? row.platforms.join(', ') : '') +
+        ' · ' +
+        (row.status || '');
+      reviewCaption.textContent = row.caption || '—';
+      if (row.imageUrl) {
+        reviewImage.src = row.imageUrl;
+        reviewImage.hidden = false;
+        reviewImage.alt = 'Draft image';
+      } else {
+        reviewImage.removeAttribute('src');
+        reviewImage.hidden = true;
+      }
+      reviewBackdrop.hidden = false;
+    }
+
+    function closeReview() {
+      reviewBackdrop.hidden = true;
+    }
+
+    function showBanner(text, kind) {
+      bannerEl.innerHTML = text
+        ? '<div class="msg ' + (kind === 'error' ? 'error' : 'ok') + '">' + escapeHtml(text) + '</div>'
+        : '';
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function previewCaption(caption, max) {
+      if (!caption) return '';
+      if (caption.length <= max) return caption;
+      return caption.slice(0, max) + '…';
+    }
+
+    function localTime(iso) {
+      if (!iso) return '';
+      const d = new Date(iso);
+      if (Number.isNaN(d.getTime())) return iso;
+      return d.toLocaleString();
+    }
+
+    function formatBrandWarnings(w) {
+      if (!Array.isArray(w) || w.length === 0) {
+        return '<td class="warnings">—</td>';
+      }
+      const parts = w.map(function (x) {
+        const code = x && x.code ? String(x.code) : '';
+        const msg = x && x.message ? String(x.message) : '';
+        return '<li><span class="warn-tag">' + escapeHtml(code) + '</span> ' + escapeHtml(msg) + '</li>';
+      });
+      return '<td class="warnings"><ul>' + parts.join('') + '</ul></td>';
+    }
+
+    function currentStatusQuery() {
+      return statusFilterEl.value || 'draft';
+    }
+
+    async function loadRows() {
+      statusEl.textContent = 'Loading…';
+      bannerEl.innerHTML = '';
+      const q = currentStatusQuery();
+      try {
+        const res = await fetch('/api/draft-posts?status=' + encodeURIComponent(q));
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        const items = data.items || [];
+        statusEl.textContent = items.length + ' row(s) · filter=' + q;
+        rowsEl.innerHTML = '';
+        for (const row of items) {
+          const tr = document.createElement('tr');
+          const actions = document.createElement('td');
+          actions.className = 'actions';
+          const st = row.status;
+          if (st === 'draft') {
+            const ap = document.createElement('button');
+            ap.type = 'button';
+            ap.textContent = 'Approve';
+            ap.addEventListener('click', () => doStatus(row.id, 'approved'));
+            const rj = document.createElement('button');
+            rj.type = 'button';
+            rj.textContent = 'Reject';
+            rj.addEventListener('click', () => doStatus(row.id, 'rejected'));
+            actions.appendChild(ap);
+            actions.appendChild(rj);
+          } else if (st === 'approved') {
+            const sch = document.createElement('button');
+            sch.type = 'button';
+            sch.textContent = 'Schedule…';
+            sch.addEventListener('click', () => doSchedule(row.id));
+            actions.appendChild(sch);
+          } else {
+            actions.textContent = '—';
+          }
+          const mediaUrl = row.imageUrl || '';
+          const mediaCell = mediaUrl
+            ? '<td class="media"><a href="' +
+                encodeURI(mediaUrl).replace(/'/g, '%27') +
+                '" target="_blank" rel="noopener">link</a></td>'
+            : '<td>—</td>';
+          tr.innerHTML =
+            '<td>' + row.id + '</td>' +
+            '<td>' + escapeHtml(localTime(row.createdAt)) + '</td>' +
+            '<td>' + escapeHtml(Array.isArray(row.platforms) ? row.platforms.join(', ') : '') + '</td>' +
+            '<td class="caption-cell"><div class="caption-cell-inner"><span class="caption-preview" title="' +
+              escapeHtml(row.caption || '') +
+              '">' +
+              escapeHtml(previewCaption(row.caption, 80)) +
+              '</span></div></td>' +
+            mediaCell +
+            '<td>' + escapeHtml(row.status) + '</td>' +
+            formatBrandWarnings(row.brandWarnings);
+          const capInner = tr.querySelector('.caption-cell-inner');
+          const previewEl = tr.querySelector('.caption-preview');
+          const reviewBtn = document.createElement('button');
+          reviewBtn.type = 'button';
+          reviewBtn.className = 'btn-review';
+          reviewBtn.textContent = 'Review';
+          reviewBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            openReview(row);
+          });
+          capInner.appendChild(reviewBtn);
+          previewEl.addEventListener('click', function () {
+            if (quickReviewToggle.checked) openReview(row);
+          });
+          tr.appendChild(actions);
+          rowsEl.appendChild(tr);
+        }
+      } catch (e) {
+        statusEl.textContent = 'Error';
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    async function doStatus(id, status) {
+      showBanner('');
+      try {
+        const res = await fetch('/api/draft-posts/' + id + '/status', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status: status })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showBanner(data.message || ('Update failed: HTTP ' + res.status), 'error');
+          return;
+        }
+        showBanner('Updated #' + id + ' → ' + status, 'ok');
+        await loadRows();
+      } catch (e) {
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    async function doSchedule(id) {
+      showBanner('');
+      const def = new Date();
+      def.setMinutes(def.getMinutes() + 60);
+      const raw = window.prompt(
+        'Run at (ISO 8601 UTC), e.g. 2026-03-22T10:00:00.000Z',
+        def.toISOString()
+      );
+      if (raw === null) return;
+      const runAtIso = raw.trim();
+      if (!runAtIso) {
+        showBanner('Cancelled', 'error');
+        return;
+      }
+      try {
+        const res = await fetch('/api/draft-posts/' + id + '/schedule', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ runAtIso: runAtIso })
+        });
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) {
+          showBanner(data.message || ('Schedule failed: HTTP ' + res.status), 'error');
+          return;
+        }
+        showBanner('Scheduled #' + id + ' → scheduled_posts id ' + data.scheduledId, 'ok');
+        await loadRows();
+      } catch (e) {
+        showBanner(e instanceof Error ? e.message : String(e), 'error');
+      }
+    }
+
+    document.getElementById('refresh').addEventListener('click', loadRows);
+    statusFilterEl.addEventListener('change', loadRows);
+    quickReviewToggle.addEventListener('change', function () {
+      rowsEl.classList.toggle('quick-review-on', quickReviewToggle.checked);
+    });
+    reviewClose.addEventListener('click', closeReview);
+    reviewBackdrop.addEventListener('click', function (e) {
+      if (e.target === reviewBackdrop) closeReview();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !reviewBackdrop.hidden) closeReview();
+    });
+    loadRows();
+  </script>
+</body>
+</html>
