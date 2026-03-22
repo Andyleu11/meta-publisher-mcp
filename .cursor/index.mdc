@@ -1,0 +1,36 @@
+# Rule Type: Always
+
+## Project Overview
+
+You are working on a Node.js + TypeScript Model Context Protocol (MCP) server named `meta-publisher-mcp`.
+
+Purpose: provide tools to an AI so it can:
+- Publish organic Facebook + Instagram posts for A to Z Flooring Solutions.
+- Optionally create local-awareness Meta ad campaigns around Bundaberg using the Marketing API.
+
+Tech stack:
+- Node 18+
+- TypeScript (strict mode)
+- @modelcontextprotocol/sdk
+- undici for HTTP
+- dotenv for env vars
+
+Key guidelines:
+- Never hard-code secrets or tokens; always read from src/config.ts.
+- Keep metaClient.ts as the single place that knows Meta endpoint URLs and auth.
+- Put each logical MCP tool in src/tools/ as a module that registers tools on `McpServer` via `registerTool` (or equivalent SDK API).
+- Use **`McpServer`** with **`StdioServerTransport`** and **`connect()`** for the process entrypoint — do not use the low-level `Server` class with a non-existent `listen()`; follow @modelcontextprotocol/sdk examples (e.g. stdio + `registerTool`).
+- Prefer small, composable functions over large monoliths.
+
+## Behaviour for Cursor Agents
+
+- Before writing code, update docs/plan.md with a clear, ordered list of tasks.
+- Implement one task at a time; keep diffs focused and small.
+- When calling external APIs, consult the official Meta Graph & Marketing API docs and link them in comments.
+- Add TODO markers where detailed Marketing API payloads need to be filled in later.
+
+## Testing & Safety
+
+- Add runtime validation and clear error messages when Meta returns non-200 responses.
+- For ad-creation tools, default campaigns/ad sets/ads to PAUSED until manually activated.
+- Keep budgets and targeting configurable via environment variables and central config.

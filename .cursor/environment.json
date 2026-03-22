@@ -1,0 +1,18 @@
+{
+  "version": "1",
+  "image": "node:20-bullseye",
+  "name": "meta-publisher-mcp-env",
+  "setup": {
+    "commands": [
+      "corepack enable",
+      "npm install"
+    ]
+  },
+  "run": {
+    "defaultCommand": "npm run dev"
+  },
+  "resources": {
+    "cpu": 2,
+    "memory": "4Gi"
+  }
+}
