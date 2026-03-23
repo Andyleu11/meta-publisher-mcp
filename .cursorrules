@@ -1,0 +1,171 @@
+# A to Z Meta Publisher — Cursor Agent Rules
+
+## Project Context
+This is an internal social media management tool for **AtoZ Flooring Solutions** 
+(atozflooringsolutions.com.au), an insurance replacement flooring business in 
+Bundaberg, Queensland, Australia.
+
+The backend is a **Flask + SQLite** app running on localhost:4000 with existing routes:
+- /admin — main admin panel
+- /admin-scheduled-posts — SQLite post queue
+- /admin-draft-posts — draft approval workflow
+- /admin-competitor-insights — competitor signal snapshots
+- /admin-post-performance — post impressions/reach/engagement
+- /supplier-email-upload — .eml/.msg/.zip ingestion
+
+The frontend needs to be rebuilt as a **modern React/Next.js UI** that interfaces 
+with these existing Flask API endpoints.
+
+---
+
+## Tech Stack (STRICT — do not deviate)
+
+### Core
+- **Framework**: Next.js 14+ (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS v3+ with custom AtoZ brand config
+- **Components**: shadcn/ui (latest) — install via `npx shadcn@latest add`
+
+### Animation & Motion
+- **Framer Motion** — for page transitions, card hovers, modal slides
+- Use `AnimatePresence` for route transitions
+- Use `motion.div` with `whileHover` for thumbnail cards
+
+### Icons
+- **Lucide React** — ONLY use lucide-react, no other icon library
+- Preferred icons: `Instagram`, `Facebook`, `Calendar`, `Image`, `Send`, 
+  `Clock`, `TrendingUp`, `Eye`, `Heart`, `MessageCircle`
+
+### Fonts
+- **Geist Sans** (via `next/font/google`) as the primary font
+- **Geist Mono** for timestamps, IDs, and code blocks
+
+---
+
+## Brand Configuration
+
+### tailwind.config.ts — extend colors with:
+```ts
+colors: {
+  brand: {
+    primary: '#1e3a5f',    // AtoZ deep navy blue
+    accent: '#e8a020',     // AtoZ warm amber/gold
+    surface: '#f8f9fa',    // clean off-white background
+    card: '#ffffff',
+    muted: '#6b7280',      // zinc-500 for secondary text
+  },
+  platform: {
+    facebook: '#1877F2',
+    instagram: '#E1306C',
+    'instagram-end': '#833AB4',
+  }
+}
+```
+
+### Design Principles
+- **White space first** — generous padding (p-6, p-8 on cards)
+- **Card-based layout** — every section lives in a rounded-2xl shadow-sm card
+- **Sidebar navigation** — collapsible, 64px icon-only / 240px expanded
+- **NO dark mode by default** — light, clean, professional
+
+---
+
+## Component Architecture
+
+### Layout
+```
+AppShell
+├── Sidebar (platform tabs: Instagram | Facebook | Scheduler | Analytics)
+├── MainContent
+│   ├── PageHeader (title + action button)
+│   ├── ContentGrid (thumbnail grid OR table view toggle)
+│   └── RightPanel (PhoneMockup preview, collapsible)
+└── ToastProvider (shadcn Toaster)
+```
+
+### Required Custom Components to Build
+1. **`<PhoneMockup>`** — CSS iPhone frame using `aspect-ratio: 9/19.5`, 
+   `rounded-[3rem]`, inner shadow, status bar. Live-renders post preview.
+2. **`<PostThumbnailCard>`** — 1:1 image grid card with:
+   - Platform badge (FB blue / IG gradient pill)
+   - Status badge (Scheduled/Draft/Published) using shadcn `<Badge>`
+   - Hover overlay with engagement stats using Framer Motion
+   - `scheduled_at` formatted with `date-fns`
+3. **`<PlatformTab>`** — Sidebar tab with platform color indicator dot
+4. **`<ScheduleTimeline>`** — Horizontal scroll timeline of upcoming posts
+5. **`<CompetitorCard>`** — Bento-style card for competitor signal data
+
+---
+
+## API Integration
+
+All API calls go to `http://localhost:4000` (Flask backend).
+Use **SWR** for data fetching with 30-second revalidation:
+```ts
+const { data, mutate } = useSWR('/api/scheduled-posts', fetcher, {
+  refreshInterval: 30000
+})
+```
+
+Create a Next.js API proxy layer at `app/api/[...path]/route.ts` to 
+forward requests to Flask, avoiding CORS issues.
+
+### Key endpoints to proxy:
+- `GET /admin-scheduled-posts` → scheduled queue
+- `GET /admin-draft-posts` → drafts for approval
+- `POST /admin-draft-posts/:id/approve` → approve draft
+- `GET /admin-competitor-insights` → competitor data
+- `GET /admin-post-performance` → engagement metrics
+
+---
+
+## Page Specifications
+
+### Dashboard (`/`)
+- 4-stat bento grid: Total Scheduled, Published This Week, Avg Engagement, 
+  Competitor Alerts
+- Recent posts thumbnail grid (last 12)
+- Upcoming schedule timeline (next 7 days)
+
+### Posts (`/posts`)
+- Toggle: Grid view (thumbnails) | Table view
+- Filter bar: Platform | Status | Date range
+- Each thumbnail: PostThumbnailCard component
+- Click → slide-in sheet (shadcn Sheet) with full post detail + PhoneMockup
+
+### Drafts (`/drafts`)
+- Card list with Approve / Reject / Schedule actions
+- Bulk action toolbar
+- PhoneMockup in right panel updates on card hover/focus
+
+### Scheduler (`/scheduler`)
+- Calendar grid (use `react-big-calendar` or custom shadcn approach)
+- Drag-to-reschedule with Framer Motion
+- Click day → quick-add post drawer
+
+### Analytics (`/analytics`)
+- Recharts line/bar charts for reach and engagement
+- Competitor insights bento grid (Magic UI Bento style)
+- Platform breakdown donut chart
+
+---
+
+## Code Style Rules
+
+- **Functional components only** — no class components
+- **TypeScript strict mode** — define all API response types in `types/api.ts`
+- **Server Components by default** — add `'use client'` only when needed 
+  (interactivity, hooks, Framer Motion)
+- **File naming**: `kebab-case` for files, `PascalCase` for components
+- **No inline styles** — Tailwind only, extend config for custom values
+- **Error boundaries** on all data-fetching pages
+- **Loading skeletons** using shadcn `<Skeleton>` on all async content
+
+---
+
+## Do NOT Do
+- Do not use Material UI, Ant Design, or Bootstrap
+- Do not use `pages/` router — App Router only
+- Do not hardcode Flask URLs in components — use env var `NEXT_PUBLIC_API_BASE`
+- Do not use `any` TypeScript type — use `unknown` and narrow
+- Do not skip loading/error states
