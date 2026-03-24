@@ -4,42 +4,58 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Admin — A to Z Meta Publisher</title>
-  <style>
-    body { font-family: system-ui, Segoe UI, sans-serif; margin: 1.5rem; max-width: 720px; line-height: 1.5; }
-    h1 { font-size: 1.35rem; }
-    .sub { color: #444; margin-bottom: 1.25rem; }
-    ul { padding-left: 1.2rem; }
-    li { margin: 0.65rem 0; }
-    a { color: #06c; font-weight: 600; }
-    .desc { color: #333; font-weight: normal; }
-    code { font-size: 0.88em; background: #f4f4f4; padding: 0.1rem 0.35rem; border-radius: 3px; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-theme.css">
 </head>
 <body>
-  <p><a href="/">← Health home</a></p>
+  <header class="installer-admin-topbar">
+    <div class="installer-admin-topbar-inner">
+      <a href="/admin" class="installer-admin-brand">
+        <img src="/customcolor_logo_transparent_background.jpeg" alt="A to Z Flooring Solutions" />
+      </a>
+      <div class="installer-admin-topbar-titles">
+        <span class="installer-admin-topbar-title">Meta Publisher</span>
+        <span class="installer-admin-topbar-sub">Internal admin</span>
+      </div>
+    </div>
+  </header>
+  <div class="admin-page admin-page--narrow">
+  <nav class="admin-nav" aria-label="Breadcrumb">
+    <a href="/">← Health home</a>
+  </nav>
   <h1>Admin</h1>
-  <p class="sub">Internal tools on the health server (not MCP). Use on trusted networks only.</p>
-  <ul>
+  <p class="admin-lead">Internal tools on the health server (not MCP). Use on trusted networks only.</p>
+  <ul class="admin-tool-list">
     <li>
-      <a href="/admin-scheduled-posts">Scheduled posts</a>
-      <span class="desc"> — SQLite queue: cancel pending rows or send now.</span>
+      <div class="admin-tool-card">
+        <a href="/admin-scheduled-posts">Scheduled posts</a>
+        <span class="desc">SQLite queue: cancel pending rows or send now.</span>
+      </div>
     </li>
     <li>
-      <a href="/admin-draft-posts">Draft posts</a>
-      <span class="desc"> — Approve, reject, or schedule rows from <code>draft_posts</code>.</span>
+      <div class="admin-tool-card">
+        <a href="/admin-draft-posts">Draft posts</a>
+        <span class="desc">Approve, reject, or schedule rows from <code>draft_posts</code>.</span>
+      </div>
     </li>
     <li>
-      <a href="/admin-competitor-insights">Competitor insights</a>
-      <span class="desc"> — Public snapshot signals from <code>competitor_signals</code> (same JSON as MCP <code>generate_competitor_report</code>).</span>
+      <div class="admin-tool-card">
+        <a href="/admin-competitor-insights">Competitor insights</a>
+        <span class="desc">Public snapshot signals from <code>competitor_signals</code> (same JSON as MCP <code>generate_competitor_report</code>).</span>
+      </div>
     </li>
     <li>
-      <a href="/admin-post-performance">Post performance</a>
-      <span class="desc"> — Cached impressions / reach / engagement from <code>post_insights</code> (filled by MCP <code>get_post_insights</code>).</span>
+      <div class="admin-tool-card">
+        <a href="/admin-post-performance">Post performance</a>
+        <span class="desc">Cached impressions / reach / engagement from <code>post_insights</code> (filled by MCP <code>get_post_insights</code>).</span>
+      </div>
     </li>
     <li>
-      <a href="/supplier-email-upload.html">Supplier email upload</a>
-      <span class="desc"> — Drag-and-drop <code>.eml</code> / <code>.msg</code> / <code>.zip</code> for ingestion into <code>supplier_updates</code>.</span>
+      <div class="admin-tool-card">
+        <a href="/supplier-email-upload.html">Supplier email upload</a>
+        <span class="desc">Drag-and-drop <code>.eml</code> / <code>.msg</code> / <code>.zip</code> for ingestion into <code>supplier_updates</code>.</span>
+      </div>
     </li>
   </ul>
+  </div>
 </body>
 </html>

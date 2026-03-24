@@ -4,33 +4,37 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Upload supplier emails — A to Z</title>
-  <style>
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-    #zone {
-      border: 2px dashed #444; border-radius: 8px; padding: 2rem; text-align: center; background: #fafafa;
-    }
-    #zone.drag { background: #eef6ff; border-color: #226; }
-    #out { margin-top: 1.5rem; font-size: 0.9rem; white-space: pre-wrap; }
-    .ok { color: #0a5; }
-    .err { color: #a20; }
-    h1 { font-size: 1.25rem; }
-    label { display: block; margin-top: 1rem; }
-    input[type="text"] { width: 100%; max-width: 100%; padding: 0.4rem; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-theme.css">
 </head>
 <body>
-  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <header class="installer-admin-topbar">
+    <div class="installer-admin-topbar-inner">
+      <a href="/admin" class="installer-admin-brand">
+        <img src="/customcolor_logo_transparent_background.jpeg" alt="A to Z Flooring Solutions" />
+      </a>
+      <div class="installer-admin-topbar-titles">
+        <span class="installer-admin-topbar-title">Meta Publisher</span>
+        <span class="installer-admin-topbar-sub">Supplier email upload</span>
+      </div>
+    </div>
+  </header>
+  <div class="admin-page admin-page--narrow">
+  <nav class="admin-nav" aria-label="Breadcrumb">
+    <a href="/admin">← Admin</a><span class="sep" aria-hidden="true">·</span><a href="/">Health home</a>
+  </nav>
   <h1>Upload supplier emails</h1>
-  <p>Drop <strong>.eml</strong>, <strong>.msg</strong>, or <strong>.zip</strong> (containing .eml/.msg). Parsed on the server; nothing is posted to social media.</p>
+  <p class="admin-lead">Drop <strong>.eml</strong>, <strong>.msg</strong>, or <strong>.zip</strong> (containing .eml/.msg). Parsed on the server; nothing is posted to social media.</p>
 
-  <label>Optional tags (comma-separated, e.g. <code>Polyflor promo, Hybrid bulletin</code>)</label>
-  <input type="text" id="manualTags" placeholder="manual tags for this batch" />
+  <div class="upload-field">
+    <label for="manualTags">Optional tags (comma-separated, e.g. <code>Polyflor promo, Hybrid bulletin</code>)</label>
+    <input type="text" id="manualTags" placeholder="manual tags for this batch" />
+  </div>
 
-  <div id="zone">
+  <div id="zone" class="upload-zone">
     <p>Drag files here or</p>
     <input type="file" id="file" multiple accept=".eml,.msg,.zip" />
   </div>
-  <div id="out"></div>
+  <div id="out" class="upload-out"></div>
 
   <script>
     const zone = document.getElementById('zone');
@@ -86,5 +90,6 @@
     });
     fileInput.addEventListener('change', () => upload(fileInput.files));
   </script>
+  </div>
 </body>
 </html>

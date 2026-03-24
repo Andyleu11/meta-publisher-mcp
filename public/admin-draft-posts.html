@@ -4,69 +4,25 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Draft posts — A to Z Meta Publisher</title>
+  <link rel="stylesheet" href="/css/admin-theme.css">
   <link rel="stylesheet" href="/css/review-bubble.css">
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1200px; }
-    h1 { font-size: 1.25rem; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
-    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: middle; }
-    th { background: #f4f4f4; }
-    .caption-cell {
-      min-width: 260px;
-      max-width: min(520px, 55vw);
-    }
-    /* Inner flex: avoid display:flex on <td> (breaks row layout / wraps button below text). */
-    .caption-cell-inner {
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
-      justify-content: space-between;
-      gap: 0.5rem;
-      min-width: 0;
-      width: 100%;
-    }
-    .caption-preview {
-      flex: 1 1 auto;
-      min-width: 0;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .btn-review {
-      flex: 0 0 auto;
-      font-size: 0.75rem;
-      padding: 0.2rem 0.45rem;
-      cursor: pointer;
-    }
-    #rows.quick-review-on .caption-preview { cursor: pointer; text-decoration: underline dotted; text-underline-offset: 3px; }
-    .review-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; box-sizing: border-box; }
-    .review-backdrop[hidden] { display: none !important; }
-    .review-dialog { position: relative; max-width: min(560px, 100%); max-height: 90vh; overflow: auto; background: #fff; border-radius: 12px; padding: 1rem 1.25rem; box-shadow: 0 8px 32px rgba(0,0,0,0.25); }
-    .review-close { position: absolute; top: 0.35rem; right: 0.5rem; border: none; background: transparent; font-size: 1.5rem; line-height: 1; cursor: pointer; color: #333; padding: 0.25rem 0.5rem; border-radius: 4px; }
-    .review-close:hover { background: #eee; }
-    .review-image { display: block; max-width: 100%; height: auto; border-radius: 8px; margin-bottom: 0.75rem; }
-    .media a { font-size: 0.8rem; word-break: break-all; }
-    .actions {
-      display: flex;
-      flex-flow: row nowrap;
-      align-items: center;
-      gap: 0.25rem;
-    }
-    .actions button { margin: 0; }
-    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-    .msg { padding: 0.5rem; border-radius: 4px; }
-    .msg.error { background: #fee; color: #800; }
-    .msg.ok { background: #efe; color: #060; }
-    a { color: #06c; }
-    label { font-size: 0.9rem; }
-    .warnings { font-size: 0.75rem; max-width: 280px; }
-    .warnings ul { margin: 0; padding-left: 1.1rem; }
-    .warnings li { margin-bottom: 0.25rem; }
-    .warn-tag { display: inline-block; font-size: 0.65rem; padding: 0.1rem 0.35rem; border-radius: 3px; background: #fff3cd; color: #664; margin-right: 0.25rem; }
-  </style>
 </head>
 <body>
-  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <header class="installer-admin-topbar">
+    <div class="installer-admin-topbar-inner">
+      <a href="/admin" class="installer-admin-brand">
+        <img src="/customcolor_logo_transparent_background.jpeg" alt="A to Z Flooring Solutions" />
+      </a>
+      <div class="installer-admin-topbar-titles">
+        <span class="installer-admin-topbar-title">Meta Publisher</span>
+        <span class="installer-admin-topbar-sub">Draft posts</span>
+      </div>
+    </div>
+  </header>
+  <div class="admin-page admin-draft-posts">
+  <nav class="admin-nav" aria-label="Breadcrumb">
+    <a href="/admin">← Admin</a><span class="sep" aria-hidden="true">·</span><a href="/">Health home</a>
+  </nav>
   <h1>Draft posts</h1>
   <p>Approve or reject drafts, then schedule approved rows to the Meta queue (<code>scheduled_posts</code>).</p>
   <div class="toolbar">
@@ -335,5 +291,6 @@
     });
     loadRows();
   </script>
+  </div>
 </body>
 </html>

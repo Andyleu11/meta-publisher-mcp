@@ -4,25 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Scheduled posts — A to Z Meta Publisher</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1200px; }
-    h1 { font-size: 1.25rem; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.875rem; }
-    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
-    th { background: #f4f4f4; }
-    .caption { max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .media a { font-size: 0.8rem; word-break: break-all; }
-    .err { color: #a00; max-width: 200px; word-break: break-word; }
-    .actions button { margin-right: 0.25rem; margin-bottom: 0.25rem; }
-    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-    .msg { padding: 0.5rem; border-radius: 4px; }
-    .msg.error { background: #fee; color: #800; }
-    .msg.ok { background: #efe; color: #060; }
-    a { color: #06c; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-theme.css">
 </head>
 <body>
-  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <header class="installer-admin-topbar">
+    <div class="installer-admin-topbar-inner">
+      <a href="/admin" class="installer-admin-brand">
+        <img src="/customcolor_logo_transparent_background.jpeg" alt="A to Z Flooring Solutions" />
+      </a>
+      <div class="installer-admin-topbar-titles">
+        <span class="installer-admin-topbar-title">Meta Publisher</span>
+        <span class="installer-admin-topbar-sub">Scheduled posts</span>
+      </div>
+    </div>
+  </header>
+  <div class="admin-page admin-scheduled-posts">
+  <nav class="admin-nav" aria-label="Breadcrumb">
+    <a href="/admin">← Admin</a><span class="sep" aria-hidden="true">·</span><a href="/">Health home</a>
+  </nav>
   <h1>Scheduled posts</h1>
   <p>Internal admin UI. Pending rows can be cancelled or sent immediately.</p>
   <div class="toolbar">
@@ -168,5 +167,6 @@
     document.getElementById('refresh').addEventListener('click', loadRows);
     loadRows();
   </script>
+  </div>
 </body>
 </html>

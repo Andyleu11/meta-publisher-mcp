@@ -4,26 +4,24 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Post performance — A to Z Meta Publisher</title>
-  <style>
-    body { font-family: system-ui, sans-serif; margin: 1rem 1.5rem; max-width: 1280px; }
-    h1 { font-size: 1.25rem; }
-    table { border-collapse: collapse; width: 100%; font-size: 0.8125rem; }
-    th, td { border: 1px solid #ccc; padding: 0.4rem 0.5rem; text-align: left; vertical-align: top; }
-    th { background: #f4f4f4; }
-    th.sortable { cursor: pointer; user-select: none; text-decoration: underline; }
-    th.sortable:hover { background: #eaeaea; }
-    .num { text-align: right; font-variant-numeric: tabular-nums; }
-    .caption { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mono { font-family: ui-monospace, monospace; font-size: 0.75rem; }
-    .toolbar { margin: 0.75rem 0; display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
-    .msg { padding: 0.5rem; border-radius: 4px; margin: 0.5rem 0; }
-    .msg.error { background: #fee; color: #800; }
-    .msg.loading { background: #f5f5f5; color: #333; }
-    a { color: #06c; }
-  </style>
+  <link rel="stylesheet" href="/css/admin-theme.css">
 </head>
 <body>
-  <p><a href="/admin">← Admin</a> · <a href="/">Health home</a></p>
+  <header class="installer-admin-topbar">
+    <div class="installer-admin-topbar-inner">
+      <a href="/admin" class="installer-admin-brand">
+        <img src="/customcolor_logo_transparent_background.jpeg" alt="A to Z Flooring Solutions" />
+      </a>
+      <div class="installer-admin-topbar-titles">
+        <span class="installer-admin-topbar-title">Meta Publisher</span>
+        <span class="installer-admin-topbar-sub">Post performance</span>
+      </div>
+    </div>
+  </header>
+  <div class="admin-page">
+  <nav class="admin-nav" aria-label="Breadcrumb">
+    <a href="/admin">← Admin</a><span class="sep" aria-hidden="true">·</span><a href="/">Health home</a>
+  </nav>
   <h1>Post performance</h1>
   <p>Latest cached metrics from <code>post_insights</code> (via MCP <code>get_post_insights</code>). Local schedule/caption links are TODO until Meta IDs are stored on <code>scheduled_posts</code>.</p>
 
@@ -183,5 +181,6 @@
 
     load();
   </script>
+  </div>
 </body>
 </html>

@@ -1,15 +1,16 @@
-/* Dark panel: header and body use the same foreground colour. */
+/* Caption review panel — Installer Portal feature-card-dark family + admin-theme tokens */
 .review-bubble {
-  background-color: var(--color-surface-offset, #1a1a1a);
-  color: #ffffff;
-  border-radius: 8px;
+  background-color: var(--review-bubble-bg, #2d3436);
+  color: var(--review-bubble-fg, #ffffff);
+  border-radius: var(--radius, 0.75rem);
   padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.05);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
 
 .review-bubble-header {
-  color: #ffffff;
+  color: var(--review-bubble-accent, #5dbe8a);
   font-weight: 600;
   font-size: 0.8125rem;
   line-height: 1.4;
@@ -18,7 +19,7 @@
 
 .review-bubble p,
 .review-bubble .review-text {
-  color: #ffffff;
+  color: var(--review-bubble-fg, #ffffff);
   font-weight: 500;
   line-height: 1.5;
   margin: 0;
