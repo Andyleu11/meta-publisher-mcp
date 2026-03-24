@@ -11,6 +11,12 @@ import { registerAdminScheduledRoutes } from './adminScheduledRoutes.js';
 import { registerCompetitorInsightsRoutes } from './competitorInsightsRoutes.js';
 import { registerEmailUploadRoutes } from './emailUploadRoutes.js';
 import { registerPostPerformanceRoutes } from './postPerformanceRoutes.js';
+import { registerSettingsRoutes } from './settingsRoutes.js';
+import { registerGenerateDraftRoutes } from './generateDraftRoutes.js';
+import { registerWebhookRoutes } from './webhookRoutes.js';
+import { registerAssetLibraryRoutes } from './assetLibraryRoutes.js';
+import { registerImageGenRoutes } from './imageGenRoutes.js';
+import { registerErrorLogRoutes } from './errorLogRoutes.js';
 
 initSchema();
 loadAssetManifest();
@@ -38,9 +44,18 @@ registerAdminDraftPostsRoutes(app);
 registerCompetitorInsightsRoutes(app);
 registerPostPerformanceRoutes(app);
 registerEmailUploadRoutes(app);
+registerSettingsRoutes(app);
+registerGenerateDraftRoutes(app);
+registerWebhookRoutes(app);
+registerAssetLibraryRoutes(app);
+registerImageGenRoutes(app);
+registerErrorLogRoutes(app);
 
 const publicDir = join(process.cwd(), 'public');
 app.use(express.static(publicDir));
+
+const generatedImagesDir = join(process.cwd(), 'data', 'generated-images');
+app.use('/generated-images', express.static(generatedImagesDir));
 
 async function checkMetaAuth() {
   const url = new URL(
@@ -105,8 +120,27 @@ app.get('/health', async (_req, res) => {
   });
 });
 
-app.listen(PORT, () => {
+app.listen(PORT, async () => {
   console.log(
     `A to Z Flooring health server listening on http://localhost:${PORT}`
   );
+
+  // Startup token validity check
+  try {
+    const metaStatus = await checkMetaAuth();
+    if (metaStatus.ok) {
+      const d = metaStatus.details as { metaName?: string; metaUserId?: string };
+      console.log(`[startup] Meta token valid — authenticated as "${d.metaName}" (ID: ${d.metaUserId})`);
+    } else {
+      console.warn('='.repeat(70));
+      console.warn('[startup] WARNING: Meta access token is INVALID or EXPIRED');
+      console.warn(`[startup] Reason: ${metaStatus.reason}`);
+      console.warn(`[startup] Details: ${JSON.stringify(metaStatus.details)}`);
+      console.warn('[startup] All scheduled posts will FAIL until the token is updated.');
+      console.warn('[startup] Update it in Settings (/settings) or .env (META_ACCESS_TOKEN).');
+      console.warn('='.repeat(70));
+    }
+  } catch (e) {
+    console.warn(`[startup] Could not verify Meta token: ${e instanceof Error ? e.message : String(e)}`);
+  }
 });

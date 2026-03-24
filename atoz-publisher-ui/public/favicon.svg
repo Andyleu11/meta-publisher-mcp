@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="Installer Portal">
+  <rect width="256" height="256" rx="32" fill="#0f1114"/>
+  <path fill="#46e8ac" d="M48 48h160c8.8 0 16 7.2 16 16v56c0 8.8-7.2 16-16 16h-69.4l69.7 78.8c6.6 7.5 1.3 19.2-8.6 19.2H48c-8.8 0-16-7.2-16-16v-64c0-8.8 7.2-16 16-16h65L48 76.2c-6.6-7.5-1.3-19.2 8.6-19.2Z"/>
+</svg>
+

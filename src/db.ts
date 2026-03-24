@@ -157,6 +157,7 @@ export function initSchema(): void {
   initPostInsightsTable(d);
   initEmailAttachmentsTextTable(d);
   initDraftPostsTable(d);
+  initErrorLogTable(d);
   const recovered = recoverProcessingOnStartup();
   if (recovered > 0) {
     console.log(
@@ -808,6 +809,19 @@ export function insertDraftPost(params: {
   return Number(r.lastInsertRowid);
 }
 
+export function countDraftsCreatedTodayBySource(createdByPrefix: string): number {
+  const d = getDb();
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const row = d
+    .prepare(
+      `SELECT COUNT(*) AS cnt FROM draft_posts
+       WHERE created_by LIKE ? AND created_at >= ?`
+    )
+    .get(`${createdByPrefix}%`, todayStart.toISOString()) as { cnt: number } | undefined;
+  return row?.cnt ?? 0;
+}
+
 /** Omit `statuses` or pass an empty array to return all drafts (newest `updated_at` first). */
 export function listDraftPosts(statuses?: string[]): DraftPostRow[] {
   const d = getDb();
@@ -981,6 +995,75 @@ export function insertEmailAttachmentText(params: {
       extractedAt
     );
   return Number(r.lastInsertRowid);
+}
+
+// ---------------------------------------------------------------------------
+// error_log table
+// ---------------------------------------------------------------------------
+
+function initErrorLogTable(d: Database.Database): void {
+  d.exec(`
+    CREATE TABLE IF NOT EXISTS error_log (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      source TEXT NOT NULL,
+      message TEXT NOT NULL,
+      detail TEXT,
+      created_at TEXT NOT NULL
+    );
+  `);
+}
+
+export function insertErrorLog(source: string, message: string, detail?: string): number {
+  const d = getDb();
+  const r = d
+    .prepare(
+      `INSERT INTO error_log (source, message, detail, created_at) VALUES (?, ?, ?, ?)`,
+    )
+    .run(source, message, detail ?? null, new Date().toISOString());
+  return Number(r.lastInsertRowid);
+}
+
+export function listErrorLog(limit = 200): Array<{
+  id: number;
+  source: string;
+  message: string;
+  detail: string | null;
+  createdAt: string;
+}> {
+  const d = getDb();
+  const rows = d
+    .prepare(`SELECT id, source, message, detail, created_at FROM error_log ORDER BY id DESC LIMIT ?`)
+    .all(limit) as Array<{
+      id: number;
+      source: string;
+      message: string;
+      detail: string | null;
+      created_at: string;
+    }>;
+  return rows.map((r) => ({
+    id: r.id,
+    source: r.source,
+    message: r.message,
+    detail: r.detail,
+    createdAt: r.created_at,
+  }));
+}
+
+export function clearErrorLog(): void {
+  const d = getDb();
+  d.exec(`DELETE FROM error_log`);
+}
+
+// ---------------------------------------------------------------------------
+// reschedule a pending post to a new date/time
+// ---------------------------------------------------------------------------
+
+export function reschedulePost(id: number, newRunAt: string): boolean {
+  const d = getDb();
+  const r = d
+    .prepare(`UPDATE scheduled_posts SET run_at = ?, updated_at = ? WHERE id = ? AND status = 'pending'`)
+    .run(newRunAt, new Date().toISOString(), id);
+  return r.changes > 0;
 }
 
 // TODO: optional periodic DELETE for old posted/failed rows to cap DB size.

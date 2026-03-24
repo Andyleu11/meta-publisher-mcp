@@ -5,6 +5,8 @@ import {
   withTransaction
 } from './db.js';
 
+const ALLOWED_PLATFORMS = new Set(['facebook', 'instagram', 'linkedin', 'google_business']);
+
 function platformsJsonToScheduledPlatform(platformsJson: string): string {
   let arr: string[] = [];
   try {
@@ -13,15 +15,16 @@ function platformsJsonToScheduledPlatform(platformsJson: string): string {
     throw new Error('Draft platforms JSON is invalid');
   }
   if (!Array.isArray(arr) || arr.length === 0) {
-    throw new Error('Draft must list at least one platform: facebook or instagram');
+    throw new Error('Draft must list at least one platform');
   }
-  const norm = arr.map((s) => String(s).toLowerCase());
+  const norm = arr.map((s) => String(s).toLowerCase()).filter((p) => ALLOWED_PLATFORMS.has(p));
+  if (norm.length === 0) {
+    throw new Error('Draft platforms must include at least one supported platform');
+  }
   const hasFb = norm.includes('facebook');
   const hasIg = norm.includes('instagram');
   if (hasFb && hasIg) return 'both';
-  if (hasIg) return 'instagram';
-  if (hasFb) return 'facebook';
-  throw new Error('Draft platforms must include facebook and/or instagram');
+  return norm[0];
 }
 
 /**

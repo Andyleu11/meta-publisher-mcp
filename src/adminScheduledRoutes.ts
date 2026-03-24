@@ -11,6 +11,7 @@ import {
   cancelScheduledPost,
   getScheduledPostById,
   listScheduledPosts,
+  reschedulePost,
   tryClaimPost
 } from './db.js';
 import { processScheduledPostRow } from './scheduler.js';
@@ -53,6 +54,33 @@ export function registerAdminScheduledRoutes(app: Express): void {
         return;
       }
       res.json({ ok: true });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      res.status(500).json({ ok: false, message: msg });
+    }
+  });
+
+  app.post('/api/scheduled-posts/:id/reschedule', (req, res) => {
+    const id = parseIdParam(req, res);
+    if (id === null) return;
+    try {
+      const body = req.body as Record<string, unknown>;
+      const newRunAt = typeof body.run_at === 'string' ? body.run_at.trim() : '';
+      if (!newRunAt) {
+        res.status(400).json({ ok: false, message: 'run_at is required (ISO-8601 datetime)' });
+        return;
+      }
+      const parsed = new Date(newRunAt);
+      if (isNaN(parsed.getTime())) {
+        res.status(400).json({ ok: false, message: 'Invalid date format for run_at' });
+        return;
+      }
+      const ok = reschedulePost(id, parsed.toISOString());
+      if (!ok) {
+        res.status(400).json({ ok: false, message: 'Post not found or not pending' });
+        return;
+      }
+      res.json({ ok: true, run_at: parsed.toISOString() });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
       res.status(500).json({ ok: false, message: msg });

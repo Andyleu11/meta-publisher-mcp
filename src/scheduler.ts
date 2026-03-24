@@ -2,13 +2,14 @@ import type { ScheduledPostRow } from './db.js';
 import {
   getDuePosts,
   getMeta,
+  insertErrorLog,
   markPostStatus,
   reclaimStaleProcessing,
   setMeta,
   tryClaimPost
 } from './db.js';
 import { runDailyCompetitorScrape } from './competitorScraper.js';
-import { postFacebookPhoto, postInstagramPhoto } from './metaClient.js';
+import { publishToplatform, type PostingPlatform } from './postingService.js';
 
 const INTERVAL_MS = Number(process.env.SCHEDULER_INTERVAL_MS ?? 45_000);
 /** Re-queue `processing` rows whose claim is older than this (ms). Default 15m. Set 0 to disable. */
@@ -24,36 +25,29 @@ export async function processScheduledPostRow(
   row: ScheduledPostRow
 ): Promise<void> {
   try {
-    if (row.platform === 'facebook') {
-      await postFacebookPhoto(row.caption, row.image_url);
-      markPostStatus(row.id, 'posted', null);
-      console.log(`[scheduler] id=${row.id} platform=facebook status=posted`);
-    } else if (row.platform === 'instagram') {
-      await postInstagramPhoto(row.caption, row.image_url);
-      markPostStatus(row.id, 'posted', null);
-      console.log(`[scheduler] id=${row.id} platform=instagram status=posted`);
-    } else if (row.platform === 'both') {
-      // TODO: if Instagram fails after Facebook succeeds, FB post is already live; consider compensating or two-phase status.
-      await postFacebookPhoto(row.caption, row.image_url);
-      await postInstagramPhoto(row.caption, row.image_url);
-      markPostStatus(row.id, 'posted', null);
-      console.log(
-        `[scheduler] id=${row.id} platform=both status=posted (facebook+instagram)`
-      );
-    } else {
-      markPostStatus(
-        row.id,
-        'failed',
-        `unknown platform: ${row.platform}`
-      );
-      console.error(
-        `[scheduler] id=${row.id} status=failed unknown platform=${row.platform}`
-      );
+    const platforms: PostingPlatform[] =
+      row.platform === 'both'
+        ? ['facebook', 'instagram']
+        : [row.platform as PostingPlatform];
+
+    for (const platform of platforms) {
+      const result = await publishToplatform(platform, row.caption, row.image_url);
+      if (!result.ok) {
+        const errMsg = result.error ?? `${platform} publish failed`;
+        markPostStatus(row.id, 'failed', errMsg);
+        insertErrorLog('scheduler', `Post ${row.id} failed on ${platform}`, errMsg);
+        console.error(`[scheduler] id=${row.id} platform=${platform} status=failed error=${errMsg}`);
+        return;
+      }
     }
+
+    markPostStatus(row.id, 'posted', null);
+    console.log(`[scheduler] id=${row.id} platform=${row.platform} status=posted`);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     const short = msg.slice(0, 500);
     markPostStatus(row.id, 'failed', short);
+    insertErrorLog('scheduler', `Post ${row.id} exception`, short);
     console.error(
       `[scheduler] id=${row.id} platform=${row.platform} status=failed error=${short}`
     );
